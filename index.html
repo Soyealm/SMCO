@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Mando Integral - CZGNB-13</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 20px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: #64748b;
+        }
+        
+        .sidebar-item.active {
+            background-color: #1e293b;
+            color: #4ade80;
+            border-left-width: 4px;
+            border-left-color: #22c55e;
+            box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+        }
+        .sidebar-item:not(.active) {
+            color: #94a3b8;
+            border-left-width: 4px;
+            border-left-color: transparent;
+        }
+        .sidebar-item:not(.active):hover {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border-left-color: #475569;
+        }
+    </style>
+</head>
+<body class="text-slate-800 overflow-hidden flex h-screen">
+
+    <!-- OVERLAY MÓVIL PARA SIDEBAR -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-72 bg-slate-900 text-white flex flex-col shadow-2xl z-40 flex-shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out">
+        <div class="p-6 border-b border-slate-800 flex items-center justify-between md:justify-center">
+            <div class="text-center w-full">
+                <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500 tracking-wider">
+                    CZGNB-13
+                </h1>
+                <p class="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest">Sistema de Mando Integral</p>
+            </div>
+            <i data-lucide="x" class="w-6 h-6 text-slate-400 cursor-pointer md:hidden" onclick="toggleSidebar()"></i>
+        </div>
+        
+        <nav class="flex-1 py-4 space-y-1 overflow-y-auto custom-scrollbar" id="sidebar-nav">
+            <!-- Inyectado por JS -->
+        </nav>
+
+        <div class="p-5 bg-slate-800/80 border-t border-slate-800">
+            <div class="flex items-center">
+                <div class="h-10 w-10 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center text-xs font-bold mr-3 shadow-lg shadow-green-900/50 text-white">GR</div>
+                <div>
+                    <p class="text-sm font-bold text-slate-200 leading-tight">Cap. Gómez Rivas</p>
+                    <p class="text-[10px] text-green-400 font-bold uppercase tracking-wider mt-0.5">Jefe de Servicio</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col overflow-hidden relative w-full">
+        <!-- HEADER -->
+        <header class="bg-white h-16 border-b border-slate-200 flex items-center justify-between px-4 sm:px-8 flex-shrink-0 z-10 shadow-sm relative">
+            <div class="flex items-center text-slate-500">
+                <i data-lucide="menu" class="mr-3 sm:mr-4 cursor-pointer hover:text-slate-800 transition-colors w-6 h-6 md:hidden" onclick="toggleSidebar()"></i>
+                <h2 class="text-base sm:text-lg font-black text-slate-800 uppercase tracking-wide truncate max-w-[200px] sm:max-w-none" id="header-title">
+                    DASHBOARD
+                </h2>
+            </div>
+            <div class="flex items-center space-x-4 sm:space-x-6">
+                <div class="relative hidden lg:block group">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors w-4 h-4"></i>
+                    <input 
+                        type="text" 
+                        placeholder="Buscar expedientes, novedades..." 
+                        class="pl-10 pr-4 py-2 bg-slate-100 border border-transparent rounded-full text-sm font-medium focus:outline-none focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100 w-64 xl:w-80 transition-all text-slate-700"
+                    />
+                </div>
+                <div class="relative cursor-pointer text-slate-400 hover:text-slate-700 transition-colors">
+                    <i data-lucide="bell" class="w-6 h-6"></i>
+                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold h-4 w-4 flex items-center justify-center rounded-full border-2 border-white shadow-sm">5</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENT AREA -->
+        <div class="flex-1 overflow-auto p-4 sm:p-6 md:p-8 bg-slate-50 relative z-0 custom-scrollbar" id="main-scroll-area">
+            <div class="max-w-7xl mx-auto" id="content-area">
+                <!-- Inyectado por JS -->
+            </div>
+        </div>
+    </main>
+
+    <!-- APPLICATION LOGIC -->
+    <script>
+        // ==========================================
+        // UI HELPERS (SIDEBAR TOGGLE)
+        // ==========================================
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        // ==========================================
+        // DATA CENTRALIZADA Y EXPANDIDA
+        // ==========================================
+        const data = {
+            personalStats: { total: 1129, disponible: 181, servicio: 270, permiso: 353, reposo: 31, pnafu: 9, privados: 14, curso: 48 },
+            
+            relacionGeneralData: [
+                { jerarquia: 'CNEL', nombre: 'VILLASMIL', cargo: 'Cmdte CZGNB-13 / ZODI', unidad: 'CZGNB-13', estatus: 'DISPONIBLE' },
+                { jerarquia: 'TCNEL', nombre: 'PEREZ ALMENAR FREDDY', cargo: 'Cmdte D-131 (Eje Península)', unidad: 'D-131', estatus: 'CURSO' },
+                { jerarquia: 'TCNEL', nombre: 'ZAPATA UZCATEGUI', cargo: 'Cmdte D-132 (Eje Occidental)', unidad: 'D-132', estatus: 'SERVICIO' },
+                { jerarquia: 'TCNEL', nombre: 'RODRIGUEZ FLORES', cargo: 'Cmdte D-133 (Eje Central)', unidad: 'D-133', estatus: 'DISPONIBLE' },
+                { jerarquia: 'TCNEL', nombre: 'LIZCANO ELMER', cargo: 'Cmdte D-134 (Eje Oriental)', unidad: 'D-134', estatus: 'PERMISO OP.' },
+                { jerarquia: 'PTTE', nombre: 'VIVAS MORENO JESUS', cargo: 'Oficial de Logística', unidad: 'CZGNB-13', estatus: 'CURSO' },
+                { jerarquia: 'SM2', nombre: 'FERNANDEZ OCHOA RONNY', cargo: 'Auxiliar Administrativo', unidad: 'CIA APOYO', estatus: 'REPOSO' },
+                { jerarquia: 'S1', nombre: 'RANGEL ZARRAGA', cargo: 'Jefe de Escuadra', unidad: 'D-132', estatus: 'PROCESO DISC.' },
+            ],
+
+            trabajosMensualesData: [
+                { titulo: 'Informe de Apresto Operacional (Abril)', area: 'Operaciones', limite: '28/04/2026', estatus: 'PENDIENTE', color: 'bg-yellow-100 text-yellow-800' },
+                { titulo: 'Relación de Munición y Armamento Consumido', area: 'Logística / Parque', limite: '25/04/2026', estatus: 'ENTREGADO', color: 'bg-green-100 text-green-800' },
+                { titulo: 'Evaluación de Desempeño del Personal Tropa', area: 'Personal', limite: '30/04/2026', estatus: 'EN PROCESO', color: 'bg-blue-100 text-blue-800' },
+                { titulo: 'Parte Mensual de Novedades e Incidencias', area: 'Inteligencia', limite: '01/05/2026', estatus: 'PENDIENTE', color: 'bg-yellow-100 text-yellow-800' },
+                { titulo: 'Plan de Mantenimiento de Parque Automotor', area: 'Logística / Transporte', limite: '22/04/2026', estatus: 'ATRASADO', color: 'bg-red-100 text-red-800' },
+            ],
+
+            procesosDisciplinariosData: [
+                { exp: 'EXP-ADM-26-001', jerarquia: 'S2', nombre: 'BRACHO BRACHO JOSE', unidad: 'D-132', causa: 'Caso Accidente de Tránsito', estatus: 'REVISIÓN' },
+                { exp: 'EXP-ADM-26-002', jerarquia: 'S2', nombre: 'LEON GONZALEZ ROSANGEL', unidad: 'D-132', causa: 'Caso Accidente de Tránsito', estatus: 'REVISIÓN' },
+                { exp: 'EXP-ADM-26-003', jerarquia: 'S1', nombre: 'RANGEL ZARRAGA', unidad: 'D-132', causa: 'Caso Incidente de Tiro', estatus: 'DECISIÓN' },
+                { exp: 'EXP-ADM-26-015', jerarquia: 'S1', nombre: 'ALDANA BRACHO ELISANDRO', unidad: 'D-133', causa: 'Desobediencia (PNAFU)', estatus: 'SUSTANCIACIÓN' },
+                { exp: 'EXP-IG-26-088', jerarquia: 'SM3', nombre: 'JIMENEZ ROMERO JERRY', unidad: 'D-132', causa: 'Abuso de Autoridad', estatus: 'REMITIDO IG' },
+            ],
+
+            atencionSocialData: [
+                { fecha: '23/04/2026', actividad: 'Jornada de Atención Médica', lugar: 'Policlínica de Polifalcón', desc: 'Para funcionarios entre 18 y 35 años (GM Venezuela Joven).' },
+                { fecha: '22/04/2026', actividad: 'Jornada de Atención Psicológica', lugar: 'Servicio Médico CZGNB-13', desc: 'Atención a 05 efectivos por jornada. Evaluación regular.' },
+                { fecha: '26/04/2026', actividad: 'Actividad Recreativa Familiar', lugar: 'Instalaciones D-133, D-134, DCR 13-1', desc: 'Dirigida a los efectivos militares y sus familiares directos.' },
+                { fecha: '24/04/2026', actividad: 'Misa y Culto Cristiano', lugar: 'Capilla CZGNB-13', desc: 'Asistencia espiritual para el personal militar de la unidad.' },
+            ],
+
+            pnafuData: [
+                { nro: 1, jerarquia: 'S2', nombre: 'MIQUILENA ELÍAS MARIANA ANDREINA', unidad: 'D-131', fecha: '27/12/2025', estatus: 'EN SUSTANCIACIÓN' },
+                { nro: 2, jerarquia: 'S2', nombre: 'MENDOZA GONZALEZ CARLOS ENRIQUE', unidad: 'CIA', fecha: '27/12/2025', estatus: 'EN SUSTANCIACIÓN' },
+                { nro: 3, jerarquia: 'S2', nombre: 'ANDRADE OCANDO HARHANDNY M.A.', unidad: 'D-131', fecha: '21/01/2026', estatus: 'EN SUSTANCIACIÓN' },
+                { nro: 4, jerarquia: 'S1', nombre: 'ALDANA BRACHO ELISANDRO', unidad: 'D-133', fecha: '01/03/2026', estatus: 'EN SUSTANCIACIÓN' },
+                { nro: 5, jerarquia: 'S2', nombre: 'FUENTES PARRA JOSE GREGORIO', unidad: 'D-131', fecha: '01/03/2026', estatus: 'EN SUSTANCIACIÓN' },
+                { nro: 6, jerarquia: 'S1', nombre: 'SANCHEZ LINARES ELISMAR', unidad: 'CIA APOYO', fecha: '31/03/2026', estatus: 'EN SUSTANCIACIÓN' },
+                { nro: 7, jerarquia: 'S2', nombre: 'NAVAS NAVAS JESUS MANUEL', unidad: 'D-131', fecha: '24/03/2026', estatus: 'EN SUSTANCIACIÓN' },
+                { nro: 8, jerarquia: 'S2', nombre: 'SULBARAN LUZARDO HURGELIS', unidad: 'D-131', fecha: '31/03/2026', estatus: 'EN SUSTANCIACIÓN' },
+                { nro: 9, jerarquia: 'S2', nombre: 'APONTE SILVA JOSE ALEJANDRO', unidad: 'D-133', fecha: '31/03/2026', estatus: 'EN SUSTANCIACIÓN' }
+            ],
+            repososData: [
+                { jquia: 'SM2', nombre: 'FERNANDEZ OCHOA RONNY', unidad: 'CIA APOYO', patologia: 'SINDROME DOLOR TORAXICO RECURRENTE', hasta: '01/04/2026' },
+                { jquia: 'SM3', nombre: 'PEROZO MEDINA JESUS', unidad: 'CIA APOYO', patologia: 'SINOVITIS CRONICA RODILLA IZQUIERDA', hasta: '16/04/2026' },
+                { jquia: 'S1', nombre: 'CASTELLANO MARRUFO G.', unidad: 'D-131', patologia: 'AMPUTACION DE PIERNA (FASCITIS)', hasta: '13/04/2026' },
+                { jquia: 'SM3', nombre: 'COLINA GARCIAS HERLYN', unidad: 'D-132', patologia: 'SINDROME DE COMPRESION RADICULA', hasta: '26/04/2026' },
+                { jquia: 'S2', nombre: 'BRACHO BRACHO JOSE FELIX', unidad: 'D-132', patologia: 'FX DE CLAVICULA DESPLAZADA', hasta: '06/04/2026' },
+                { jquia: 'S2', nombre: 'LEON GONZALEZ ROSANGEL', unidad: 'D-132', patologia: 'TRAUMATISMO HOMBRO IZQ. / ESGUINSE', hasta: '27/04/2026' },
+                { jquia: 'SM3', nombre: 'BERMUDEZ MIRENA YETZIMAR', unidad: 'D-133', patologia: 'DISCOPATIA CERVIVAL L5,L6,C6,C7', hasta: '13/04/2026' },
+                { jquia: 'S/1', nombre: 'ZAVALA CHAVEZ GREOMAR', unidad: 'D-134', patologia: 'ANEMIA FASIFORME MEDIA', hasta: '27/04/2026' }
+            ],
+            embarazosData: [
+                { jquia: 'TTE', nombre: 'PARDO MAVO MARIA JESUS', patologia: 'PRENATAL', hasta: '11/04/2026' },
+                { jquia: 'S2', nombre: 'VILLA PIRELA AURIMAR', patologia: 'POST-NATAL', hasta: '19/06/2026' }
+            ],
+            cursoData: [
+                { jerarquia: 'TCNEL', nombre: 'PEREZ ALMENAR FREDDY', curso: 'Fortalecimiento Capacidades Profesionales', instituto: 'CZGNB-13' },
+                { jerarquia: 'TCNEL', nombre: 'ALVARADO GUERRA ROMER', curso: 'Fortalecimiento Capacidades Profesionales', instituto: 'CZGNB-13' },
+                { jerarquia: 'PTTE', nombre: 'VIVAS MORENO JESUS DANIEL', curso: 'Administración de Recursos', instituto: 'IESEOFANB' },
+                { jerarquia: 'S1', nombre: 'ZARRAGA POLANCO EDUARDO', curso: 'Seguridad y Educación Vial', instituto: 'INTT Coro' },
+                { jerarquia: 'S1', nombre: 'SAAVEDRA VENTURA LUIS', curso: 'Seguridad y Educación Vial', instituto: 'INTT Coro' },
+                { jerarquia: 'S2', nombre: 'DIAZ CEPEDA ANTONY JOSE', curso: 'Fortalecimiento Capacidades Profesionales', instituto: 'CZGNB-13' },
+                { jerarquia: 'S2', nombre: 'LUGO FERNANDEZ JECENIA', curso: 'Fortalecimiento Capacidades Profesionales', instituto: 'CZGNB-13' }
+            ],
+            pdlData: [
+                { jerarquia: 'SM2', nombre: 'DIAZ PIRELA ABRAHAN JOSE', delito: 'TRÁFICO ILÍCITO DE SUSTANCIAS (DROGAS)', estatus: 'EN ESPERA DE JUICIO', reclusion: 'URIA-52' },
+                { jerarquia: 'SM3', nombre: 'VILCHEZ BRACHO DANIEL', delito: 'DESOBEDIENCIA AGRAVADA / SUSTRACCIÓN', estatus: 'SENTENCIADO (10 DÍAS)', reclusion: 'RAMO VERDE' },
+                { jerarquia: 'SM3', nombre: 'JIMENEZ ROMERO JERRY', delito: 'ABUSO DE AUTORIDAD Y DESOBEDIENCIA', estatus: 'EN ESPERA DE JUICIO', reclusion: 'D-132' },
+                { jerarquia: 'S1', nombre: 'FIGUEROA ROJAS JIMI Z.', delito: 'APROPIACIÓN DE BIENES DEL ESTADO', estatus: 'EN JUICIO', reclusion: 'DR. FRANCISCO DELGADO' },
+                { jerarquia: 'S2', nombre: 'ACOSTA DÍAZ WLADIMIR', delito: 'CORRUPCIÓN PASIVA PROPIA AGRAVADA', estatus: 'ARRESTO DOMICILIARIO', reclusion: 'CUMAREBO' },
+                { jerarquia: 'S2', nombre: 'CASTILLO MEDINA ANGEL', delito: 'TRÁFICO ILÍCITO DE ARMAS', estatus: 'SENTENCIADO (12 DÍAS)', reclusion: 'POLIFALCÓN' },
+                { jerarquia: 'S1', nombre: 'NAVA CARDOZO ALBERT', delito: 'TRÁFICO MATERIAL ESTRATÉGICO', estatus: 'SENTENCIADO (10 DÍAS)', reclusion: 'SEGURIDAD FÍSICA AMUAY' },
+                { jerarquia: 'S2', nombre: 'CARREÑO GOMEZ ALEJANDRO', delito: 'ROBO AGRAVADO Y AGAVILLAMIENTO', estatus: 'EN ESPERA DE JUICIO', reclusion: 'POLICIA MUNICIPAL CARIRUBANA' }
+            ],
+            armamentoData: [
+                { eje: 'CENTRAL', responsable: 'TCNEL RODRIGUEZ FLORES', fusiles: 1800, municiones: 153400 },
+                { eje: 'PENINSULA', responsable: 'TCNEL PEREZ ALMENAR', fusiles: 600, municiones: 144060 },
+                { eje: 'OCCIDENTAL', responsable: 'TCNEL ZAPATA UZCATEGUI', fusiles: 2858, municiones: 72000 },
+                { eje: 'ORIENTAL', responsable: 'TCNEL LIZCANO', fusiles: 3950, municiones: 96000 }
+            ],
+            subestacionesData: [
+                { unidad: 'D-131', instalacion: 'S/E JUDIBANA', personal: 2 },
+                { unidad: 'D-131', instalacion: 'PARQUE EÓLICO PARAGUANÁ', personal: 2 },
+                { unidad: 'D-132', instalacion: 'S/E ISIRO', personal: 2 },
+                { unidad: 'DESUR', instalacion: 'TERMOELÉCTRICA JOSEFA CAMEJO', personal: 2 }
+            ],
+            agendaData: [
+                { day: 'Lunes', date: '20/04/26', events: ['Formación de lista y revisión de documentación.', 'Oficio solicitud combustible.', 'Inicio Curso Fortalecimiento Capacidades.'] },
+                { day: 'Martes', date: '21/04/26', events: ['Formación Control Trote y Educación Física.', 'Revisión Expedientes Disciplinarios.', 'Licenciamiento Contingente SEP23.'] },
+                { day: 'Miércoles', date: '22/04/26', events: ['Formación Soberanía Nacional.', 'Atención psicológica (05).', '2do Curso de Tiro Virtual.'] },
+                { day: 'Jueves', date: '23/04/26', events: ['Barrio Tricolor Centinela.', 'Bricomil Salud y Educación.', 'Taller prevención antidrogas.'] },
+                { day: 'Viernes', date: '24/04/26', events: ['Mantenimiento general UUTT.', 'Misa y Culto Cristiano.', 'Inspección Parques de Armas ZODI.'] },
+                { day: 'Sábado', date: '25/04/26', events: ['Sábado Militar (Instalaciones estratégicas).', 'Mantenimiento cuarteles.', 'Limpieza de armamento.'] },
+                { day: 'Domingo', date: '26/04/26', events: ['Mantenimiento de vehículos.', 'Actividad recreativa familiar.'] }
+            ],
+            instruccionesData: [
+                { tipo: 'RDGMA', num: 'RDGMA-0422', desc: 'Inspección de Parques de Armas a la ZODI Falcón.', resp: 'Cnel. Villasmil', fecha: '24/04/26', estatus: 'URGENTE', color: 'bg-red-100 text-red-700 border-red-200' },
+                { tipo: 'RDGMA', num: 'RDGMA-0450', desc: 'Activación del Plan República (Fase Pre-Despliegue de Seguridad Institucional).', resp: 'REDI Occidental', fecha: '25/04/26', estatus: 'URGENTE', color: 'bg-red-100 text-red-700 border-red-200' },
+                { tipo: 'CIRCULAR', num: 'CIRC-012', desc: 'Medidas de seguridad física reforzada en instalaciones petroleras y subestaciones eléctricas.', resp: 'Cmdte D-131', fecha: '18/04/26', estatus: 'PRIORIDAD', color: 'bg-orange-100 text-orange-700 border-orange-200' },
+                { tipo: 'OFICIO', num: 'OFIC-9921', desc: 'Solicitud de dotación de combustible para unidades patrulleras (Eje Central).', resp: 'Ptte. Vivas', fecha: '20/04/26', estatus: 'ORDINARIO', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+                { tipo: 'ORDEN G.', num: 'O/G-0045', desc: 'Disposiciones generales para el uso del uniforme patriota y presentación personal.', resp: 'COGEGUARNAC', fecha: '15/04/26', estatus: 'ORDINARIO', color: 'bg-blue-100 text-blue-700 border-blue-200' }
+            ],
+            instruccionesVerbalesData: [
+                { emisor: 'Cmdte de Zona', asunto: 'Refuerzo de patrullaje nocturno en el Eje Península.', fecha: '24/04/26 08:30 AM', receptor: 'Todos los D-13X', estatus: 'EN EJECUCIÓN' },
+                { emisor: '2do Cmdte CZGNB-13', asunto: 'Revista sorpresiva a las áreas de armamento.', fecha: '24/04/26 09:15 AM', receptor: 'D-131 / D-132', estatus: 'CUMPLIDO' },
+                { emisor: 'Jefe de Operaciones', asunto: 'Despliegue inmediato por novedad ambiental.', fecha: '23/04/26 14:00 PM', receptor: 'D-134', estatus: 'CUMPLIDO' }
+            ],
+            docExternosData: [
+                { ente: 'MINEC Falcón', ref: 'OF-004-2026', asunto: 'Solicitud de apoyo Guardería Ambiental en Parque Nacional Los Médanos.', fecha: '22/04/26', prioridad: 'MEDIA' },
+                { ente: 'Gobernación Falcón', ref: 'GOB-SEC-92', asunto: 'Coordinación despliegue de seguridad "Vacaciones Seguras".', fecha: '20/04/26', prioridad: 'ALTA' },
+                { ente: 'Ministerio Público', ref: 'MP-FAL-112', asunto: 'Citación para efectivos en calidad de testigos (Caso Retención Queso).', fecha: '21/04/26', prioridad: 'ALTA' }
+            ],
+            expedientesData: [
+                { exp: 'EXP-ADM-2026-001', involucrado: 'S2 Miquilena Mariana', causa: 'Permanencia No Autorizada (PNAFU)', fase: 'Sustanciación', fecha: '27/12/25' },
+                { exp: 'EXP-ADM-2026-015', involucrado: 'S1 Aldana Bracho', causa: 'Desobediencia de directrices internas', fase: 'Decisión', fecha: '01/03/26' },
+                { exp: 'EXP-ADM-2026-022', involucrado: 'SM3 Jimenez Romero', causa: 'Abuso de Autoridad (Caso D-132)', fase: 'Cerrado - Remitido', fecha: '15/03/26' }
+            ],
+            gedoData: [
+                { nombre: 'Los Chicateros', zona: 'Eje Occidental (Mauroa)', lider: 'Alias "El Pelón"', delitos: 'Extorsión, Abigeato', estatus: 'DESMANTELAMIENTO EN CURSO' },
+                { nombre: 'El Tren de Falcón', zona: 'Península de Paraguaná', lider: 'Alias "El Chino"', delitos: 'Narcotráfico, Sicariato', estatus: 'BAJO INVESTIGACIÓN' }
+            ],
+            transporteData: [
+                { tipo: 'Toyota Land Cruiser 70', cantidad: 45, operativos: 28, inoperativos: 17 },
+                { tipo: 'Toyota Hilux', cantidad: 30, operativos: 22, inoperativos: 8 },
+                { tipo: 'Moto KLR 650', cantidad: 120, operativos: 85, inoperativos: 35 },
+                { tipo: 'Camiones Kodiak', cantidad: 12, operativos: 9, inoperativos: 3 }
+            ]
+        };
+
+        // ==========================================
+        // STATE MANAGEMENT
+        // ==========================================
+        const state = {
+            currentModule: 'DASHBOARD',
+            activeTabs: {
+                PERSONAL: 1,
+                INTELIGENCIA: 0,
+                OPERACIONES: 0,
+                LOGISTICA: 2,
+                PLANIFICACION: 0,
+                ESTADISTICA: 0,
+                INSTRUCCIONES: 0
+            },
+            personalDetailView: null // 'REPOSO', 'PNAFU', 'PRIVADOS', 'CURSO'
+        };
+
+        let chartInstances = [];
+
+        const modules = [
+            { id: 'DASHBOARD', title: 'Dashboard Principal', icon: 'layout-dashboard', type: 'main' },
+            { id: 'PERSONAL', title: 'I. Personal', icon: 'users', type: 'module' },
+            { id: 'INTELIGENCIA', title: 'II. Inteligencia', icon: 'brain-circuit', type: 'module' },
+            { id: 'OPERACIONES', title: 'III. Operaciones', icon: 'shield-alert', type: 'module' },
+            { id: 'LOGISTICA', title: 'IV. Logísticas', icon: 'truck', type: 'module' },
+            { id: 'PLANIFICACION', title: 'V. Planificación', icon: 'calendar', type: 'module' },
+            { id: 'ESTADISTICA', title: 'VI. Estadística', icon: 'bar-chart-3', type: 'module' },
+            { id: 'INSTRUCCIONES', title: 'VII. Instrucciones', icon: 'file-signature', type: 'module' },
+        ];
+
+        const moduleTabs = {
+            PERSONAL: ["Relación General", "Parte y Situación", "Trabajos Mensuales", "Procesos Disciplinarios", "Reposos y Embarazos", "Atención Social", "Cursos y Capacitación"],
+            INTELIGENCIA: ["Ciudadanos PDL", "Sala de Evidencias", "Hampograma GEDO", "Registro Denuncias"],
+            OPERACIONES: ["Resultados Orden Interno", "Instalaciones Estratégicas", "Operaciones Militares", "Despliegue CUPAZ", "Prevención del Delito", "Registro Expedientes", "Ejercicios de Tiro"],
+            LOGISTICA: ["Relación Transporte", "Situación Transporte", "Armamento y Munición", "Distribución Armas", "Trabajos Mensuales"],
+            PLANIFICACION: ["Agenda Concreta Semanal", "Plan de Patrullaje", "Cronograma de Inspecciones"],
+            ESTADISTICA: ["Mantenimiento Orden Interno", "Policía Administrativa", "Cooperación Defensa", "Desarrollo Nacional", "Eficiencia Institucional"],
+            INSTRUCCIONES: ["Bandeja de Entrada Documental", "Instrucciones Verbales", "Documentos Externos", "Registro Expedientes"]
+        };
+
+        // ==========================================
+        // HELPERS UI
+        // ==========================================
+        function createStatCard(title, value, icon, colorClass, subtitle = '', trend = '') {
+            return `
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center hover:shadow-md transition-shadow justify-between">
+                    <div class="flex items-center">
+                        <div class="p-4 rounded-xl mr-4 ${colorClass}">
+                            <i data-lucide="${icon}" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">${title}</p>
+                            <h3 class="text-2xl font-black text-slate-800 leading-tight">${value}</h3>
+                            ${subtitle ? `<p class="text-[11px] text-slate-400 mt-1 font-bold uppercase">${subtitle}</p>` : ''}
+                        </div>
+                    </div>
+                    ${trend ? `<div class="bg-slate-50 px-2 py-1 rounded border border-slate-100 whitespace-nowrap ml-2">${trend}</div>` : ''}
+                </div>
+            `;
+        }
+
+        function createTabs(moduleName) {
+            const tabs = moduleTabs[moduleName];
+            if (!tabs) return '';
+            const activeIdx = state.activeTabs[moduleName];
+            
+            let tabsHtml = tabs.map((tab, idx) => `
+                <button onclick="changeTab('${moduleName}', ${idx})" 
+                        class="px-4 py-2.5 text-sm font-bold rounded-lg whitespace-nowrap transition-all duration-200 flex-shrink-0
+                        ${activeIdx === idx ? 'bg-white text-green-700 shadow-sm border border-slate-200/60' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}">
+                    ${tab}
+                </button>
+            `).join('');
+
+            return `<div class="flex space-x-1 bg-slate-100/80 p-1.5 rounded-xl mb-6 overflow-x-auto custom-scrollbar border border-slate-200 w-full">${tabsHtml}</div>`;
+        }
+
+        function destroyCharts() {
+            chartInstances.forEach(chart => {
+                if(chart) chart.destroy();
+            });
+            chartInstances = [];
+        }
+
+        // ==========================================
+        // VISTAS (RENDERERS)
+        // ==========================================
+
+        function renderDashboard() {
+            const trendUp = `<span class="text-green-500 font-bold flex items-center text-[10px]"><i data-lucide="trending-up" class="w-3 h-3 mr-1"></i>+2.4%</span>`;
+            const trendDown = `<span class="text-red-500 font-bold flex items-center text-[10px]"><i data-lucide="trending-down" class="w-3 h-3 mr-1"></i>-1.2%</span>`;
+            
+            let html = `
+                <div class="space-y-6 animate-fade-in w-full">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        ${createStatCard('Fuerza Efectiva', data.personalStats.total, 'users', 'bg-blue-100 text-blue-700', 'Total CZGNB-13', trendUp)}
+                        ${createStatCard('Personal Disponible', data.personalStats.disponible, 'check-circle', 'bg-green-100 text-green-700', '16% de la fuerza', trendUp)}
+                        ${createStatCard('Fusiles Operativos', '9.208', 'crosshair', 'bg-slate-800 text-white', 'Calibre 7.62x51', trendUp)}
+                        ${createStatCard('Alertas Críticas', data.personalStats.pnafu + data.personalStats.privados, 'alert-triangle', 'bg-red-100 text-red-700', 'PNAFU y PDL', trendDown)}
+                    </div>
+
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        <!-- Gráficos Reales -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 xl:col-span-2 flex flex-col">
+                            <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
+                                <i data-lucide="bar-chart-3" class="mr-2 text-blue-600 w-5 h-5"></i> Resumen Estadístico Operacional
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
+                                <div class="flex flex-col">
+                                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Estado de la Tropa</h4>
+                                    <div class="flex-1 relative min-h-[220px]">
+                                        <canvas id="chartTropa"></canvas>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col">
+                                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Material Estratégico Retenido (Tons)</h4>
+                                    <div class="flex-1 relative min-h-[220px]">
+                                        <canvas id="chartMaterial"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panel Alimentación / Alerta -->
+                        <div class="space-y-6">
+                            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+                                <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                                    <i data-lucide="utensils" class="mr-2 text-green-600 w-5 h-5"></i> Alimentación del Día
+                                </h3>
+                                <div class="space-y-3">
+                                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-start">
+                                        <div class="h-8 w-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs mr-3 shrink-0">D</div>
+                                        <div><p class="text-xs text-slate-500 font-bold uppercase">Desayuno</p><p class="text-sm font-medium text-slate-700">Arepa rellena con mortadela.</p></div>
+                                    </div>
+                                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-start">
+                                        <div class="h-8 w-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs mr-3 shrink-0">A</div>
+                                        <div><p class="text-xs text-slate-500 font-bold uppercase">Almuerzo</p><p class="text-sm font-medium text-slate-700">Arroz con pollo y caraotas.</p></div>
+                                    </div>
+                                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-start">
+                                        <div class="h-8 w-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs mr-3 shrink-0">C</div>
+                                        <div><p class="text-xs text-slate-500 font-bold uppercase">Cena</p><p class="text-sm font-medium text-slate-700">Arepa rellena con queso.</p></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-800 rounded-2xl shadow-sm p-4 sm:p-6 text-white relative overflow-hidden">
+                                <i data-lucide="shield-alert" class="absolute -top-4 -right-4 w-32 h-32 text-slate-700 opacity-20"></i>
+                                <h3 class="text-lg font-bold mb-2 relative z-10">Operación Cacique Manaure</h3>
+                                <p class="text-sm text-slate-300 relative z-10 mb-4">Despliegue activo en sub-estaciones eléctricas y patrullaje de contención en el Eje Occidental.</p>
+                                <button class="bg-green-500 hover:bg-green-600 text-white font-bold text-xs py-2 px-4 rounded-lg transition-colors relative z-10 shadow-lg w-full sm:w-auto">Detalles de Operación</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('content-area').innerHTML = html;
+            lucide.createIcons();
+
+            // Init Charts with timeout to ensure DOM is ready
+            setTimeout(() => {
+                const ctxTropa = document.getElementById('chartTropa');
+                if(ctxTropa) {
+                    chartInstances.push(new Chart(ctxTropa.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Servicio', 'Permiso', 'Disponible', 'Reposo/Otros'],
+                            datasets: [{
+                                data: [data.personalStats.servicio, data.personalStats.permiso, data.personalStats.disponible, 87],
+                                backgroundColor: ['#3b82f6', '#94a3b8', '#22c55e', '#eab308'],
+                                borderWidth: 0,
+                                hoverOffset: 4
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11, family: 'Inter' } } } }, cutout: '70%' }
+                    }));
+                }
+
+                const ctxMat = document.getElementById('chartMaterial');
+                if(ctxMat) {
+                    chartInstances.push(new Chart(ctxMat.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['Ferroso', 'Cobre', 'Aluminio', 'Forestal'],
+                            datasets: [{
+                                label: 'Toneladas',
+                                data: [24, 5, 8, 12],
+                                backgroundColor: ['#0f172a', '#f59e0b', '#94a3b8', '#22c55e'],
+                                borderRadius: 4
+                            }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            plugins: { legend: { display: false } }, 
+                            scales: { 
+                                y: { beginAtZero: true, grid: { borderDash: [4, 4] } },
+                                x: { grid: { display: false } }
+                            } 
+                        }
+                    }));
+                }
+            }, 50);
+        }
+
+        window.showPersonalDetail = function(viewType) {
+            state.personalDetailView = viewType;
+            renderPersonal();
+            
+            setTimeout(() => {
+                const detailSection = document.getElementById('personal-detail-section');
+                if(detailSection) detailSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 50);
+        };
+
+        function renderPersonal() {
+            const activeTab = state.activeTabs['PERSONAL'];
+            let content = '';
+
+            if (activeTab === 0) { // Relación General
+                let rows = data.relacionGeneralData.map(p => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td class="p-3 sm:p-4 font-bold text-slate-800 whitespace-nowrap">${p.jerarquia} ${p.nombre}</td>
+                        <td class="p-3 sm:p-4 text-slate-600 font-medium min-w-[200px]">${p.cargo}</td>
+                        <td class="p-3 sm:p-4"><span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-bold text-slate-600 whitespace-nowrap">${p.unidad}</span></td>
+                        <td class="p-3 sm:p-4"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${p.estatus === 'DISPONIBLE' ? 'bg-green-100 text-green-800 border border-green-200' : p.estatus === 'SERVICIO' ? 'bg-blue-100 text-blue-800 border border-blue-200' : p.estatus === 'REPOSO' || p.estatus === 'PROCESO DISC.' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' : 'bg-slate-100 text-slate-600 border border-slate-200'}">${p.estatus}</span></td>
+                    </tr>
+                `).join('');
+                content = `
+                    <div class="animate-fade-in space-y-6">
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center"><i data-lucide="users" class="mr-2 text-blue-600"></i> Relación General del Personal</h2>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm w-full">
+                            <table class="w-full text-left text-sm bg-white min-w-[700px]"><thead class="bg-slate-800 text-slate-200 uppercase text-[10px] tracking-wider"><tr><th class="p-3 sm:p-4">Jerarquía y Nombre</th><th class="p-3 sm:p-4">Cargo / Función</th><th class="p-3 sm:p-4">Unidad Asignada</th><th class="p-3 sm:p-4">Situación Actual</th></tr></thead><tbody>${rows}</tbody></table>
+                        </div>
+                    </div>
+                `;
+            } else if (activeTab === 1) { // Parte y Situación
+                let detailHtml = '';
+                if (state.personalDetailView === 'REPOSO') {
+                    let rows = data.repososData.map(r => `
+                        <tr class="border-t border-slate-100 hover:bg-yellow-50/30">
+                            <td class="p-3 font-bold text-slate-800 whitespace-nowrap">${r.jquia} ${r.nombre}</td>
+                            <td class="p-3 text-slate-600 font-medium">${r.patologia}</td>
+                            <td class="p-3"><span class="bg-slate-100 px-2 py-1 rounded text-xs font-bold text-slate-600 whitespace-nowrap">${r.unidad}</span></td>
+                            <td class="p-3 text-yellow-700 font-bold whitespace-nowrap">${r.hasta}</td>
+                        </tr>
+                    `).join('');
+                    detailHtml = `
+                        <div id="personal-detail-section" class="animate-slide-up mt-6 sm:mt-8 bg-white border border-yellow-200 rounded-2xl shadow-sm overflow-hidden">
+                            <div class="bg-yellow-50 p-4 border-b border-yellow-200 flex justify-between items-center">
+                                <h3 class="text-base sm:text-lg font-bold text-yellow-800 flex items-center"><i data-lucide="stethoscope" class="mr-2 w-5 h-5"></i> Personal en Reposo Médico (${data.repososData.length})</h3>
+                                <button onclick="showPersonalDetail(null)" class="text-yellow-600 hover:text-yellow-900"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            </div>
+                            <div class="overflow-x-auto w-full">
+                                <table class="w-full text-left text-sm min-w-[600px]"><thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider"><tr><th class="p-3">Jerarquía y Nombre</th><th class="p-3">Patología</th><th class="p-3">Unidad</th><th class="p-3">Hasta</th></tr></thead><tbody>${rows}</tbody></table>
+                            </div>
+                        </div>
+                    `;
+                } else if (state.personalDetailView === 'PNAFU') {
+                    let rows = data.pnafuData.map(p => `
+                        <tr class="border-t border-slate-100 hover:bg-red-50/30">
+                            <td class="p-3 font-bold text-slate-800 whitespace-nowrap">${p.jerarquia} ${p.nombre}</td>
+                            <td class="p-3"><span class="bg-slate-100 px-2 py-1 rounded text-xs font-bold text-slate-600 whitespace-nowrap">${p.unidad}</span></td>
+                            <td class="p-3 text-red-600 font-bold whitespace-nowrap">${p.fecha}</td>
+                            <td class="p-3"><span class="text-orange-600 font-bold text-[10px] tracking-wider uppercase bg-orange-50 px-2 py-1 rounded border border-orange-100 whitespace-nowrap">${p.estatus}</span></td>
+                        </tr>
+                    `).join('');
+                    detailHtml = `
+                        <div id="personal-detail-section" class="animate-slide-up mt-6 sm:mt-8 bg-white border border-red-200 rounded-2xl shadow-sm overflow-hidden">
+                            <div class="bg-red-50 p-4 border-b border-red-200 flex justify-between items-center">
+                                <h3 class="text-base sm:text-lg font-bold text-red-800 flex items-center"><i data-lucide="alert-triangle" class="mr-2 w-5 h-5"></i> Personal PNAFU / Evadido (${data.pnafuData.length})</h3>
+                                <button onclick="showPersonalDetail(null)" class="text-red-600 hover:text-red-900"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            </div>
+                            <div class="overflow-x-auto w-full">
+                                <table class="w-full text-left text-sm min-w-[600px]"><thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider"><tr><th class="p-3">Jerarquía y Nombre</th><th class="p-3">Unidad</th><th class="p-3">Fecha Inicio</th><th class="p-3">Estatus</th></tr></thead><tbody>${rows}</tbody></table>
+                            </div>
+                        </div>
+                    `;
+                } else if (state.personalDetailView === 'PRIVADOS') {
+                    let rows = data.pdlData.map(p => `
+                        <tr class="border-t border-slate-100 hover:bg-orange-50/30">
+                            <td class="p-3 font-bold text-slate-800 whitespace-nowrap">${p.jerarquia} ${p.nombre}</td>
+                            <td class="p-3 text-slate-600 text-xs min-w-[200px]">${p.delito}</td>
+                            <td class="p-3"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${p.estatus.includes('SENTENCIADO') ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'} whitespace-nowrap">${p.estatus}</span></td>
+                            <td class="p-3 text-slate-500 font-medium text-xs whitespace-nowrap">${p.reclusion}</td>
+                        </tr>
+                    `).join('');
+                    detailHtml = `
+                        <div id="personal-detail-section" class="animate-slide-up mt-6 sm:mt-8 bg-white border border-orange-200 rounded-2xl shadow-sm overflow-hidden">
+                            <div class="bg-orange-50 p-4 border-b border-orange-200 flex justify-between items-center">
+                                <h3 class="text-base sm:text-lg font-bold text-orange-800 flex items-center"><i data-lucide="gavel" class="mr-2 w-5 h-5"></i> Personal Privado de Libertad (${data.pdlData.length})</h3>
+                                <button onclick="showPersonalDetail(null)" class="text-orange-600 hover:text-orange-900"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            </div>
+                            <div class="overflow-x-auto w-full">
+                                <table class="w-full text-left text-sm min-w-[700px]"><thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider"><tr><th class="p-3">Identificación</th><th class="p-3">Delito</th><th class="p-3">Estatus</th><th class="p-3">Centro Reclusión</th></tr></thead><tbody>${rows}</tbody></table>
+                            </div>
+                        </div>
+                    `;
+                } else if (state.personalDetailView === 'CURSO') {
+                    let rows = data.cursoData.map(c => `
+                        <tr class="border-t border-slate-100 hover:bg-purple-50/30">
+                            <td class="p-3 font-bold text-slate-800 whitespace-nowrap">${c.jerarquia} ${c.nombre}</td>
+                            <td class="p-3 text-purple-700 font-medium min-w-[200px]">${c.curso}</td>
+                            <td class="p-3 text-slate-500 text-xs font-bold uppercase whitespace-nowrap"><i data-lucide="building" class="inline w-3 h-3 mr-1"></i> ${c.instituto}</td>
+                        </tr>
+                    `).join('');
+                    detailHtml = `
+                        <div id="personal-detail-section" class="animate-slide-up mt-6 sm:mt-8 bg-white border border-purple-200 rounded-2xl shadow-sm overflow-hidden">
+                            <div class="bg-purple-50 p-4 border-b border-purple-200 flex justify-between items-center">
+                                <h3 class="text-base sm:text-lg font-bold text-purple-800 flex items-center"><i data-lucide="graduation-cap" class="mr-2 w-5 h-5"></i> Personal en Curso / Capacitación (${data.cursoData.length})</h3>
+                                <button onclick="showPersonalDetail(null)" class="text-purple-600 hover:text-purple-900"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            </div>
+                            <div class="overflow-x-auto w-full">
+                                <table class="w-full text-left text-sm min-w-[600px]"><thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider"><tr><th class="p-3">Jerarquía y Nombre</th><th class="p-3">Nombre del Curso</th><th class="p-3">Instituto / Sede</th></tr></thead><tbody>${rows}</tbody></table>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                content = `
+                    <div class="space-y-6 animate-fade-in">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800 mb-4">Parte Numérico Consolidado <span class="text-xs text-slate-400 font-normal ml-2 hidden sm:inline">(Click en alertas para ver detalles)</span></h2>
+                            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+                                <div class="text-center p-4 rounded-xl border border-slate-200 bg-slate-50"><p class="text-3xl font-black text-slate-800">${data.personalStats.total}</p><p class="text-[10px] text-slate-500 font-bold uppercase mt-1">Efectiva</p></div>
+                                <div class="text-center p-4 rounded-xl border border-green-200 bg-green-50"><p class="text-3xl font-black text-green-700">${data.personalStats.disponible}</p><p class="text-[10px] text-green-600 font-bold uppercase mt-1">Disponible</p></div>
+                                <div class="text-center p-4 rounded-xl border border-blue-200 bg-blue-50"><p class="text-3xl font-black text-blue-700">${data.personalStats.servicio}</p><p class="text-[10px] text-blue-600 font-bold uppercase mt-1">Servicio</p></div>
+                                <div class="text-center p-4 rounded-xl border border-slate-200 bg-slate-50"><p class="text-3xl font-black text-slate-600">${data.personalStats.permiso}</p><p class="text-[10px] text-slate-500 font-bold uppercase mt-1">Permiso Op.</p></div>
+                                
+                                <div onclick="showPersonalDetail('REPOSO')" class="cursor-pointer hover:shadow-md transition-all transform hover:-translate-y-1 text-center p-4 rounded-xl border border-yellow-200 bg-yellow-50 relative group">
+                                    <p class="text-3xl font-black text-yellow-700 group-hover:text-yellow-600">${data.personalStats.reposo}</p><p class="text-[10px] text-yellow-600 font-bold uppercase mt-1">Reposo <i data-lucide="chevron-down" class="inline w-3 h-3"></i></p>
+                                </div>
+                                <div onclick="showPersonalDetail('PNAFU')" class="cursor-pointer hover:shadow-md transition-all transform hover:-translate-y-1 text-center p-4 rounded-xl border border-red-200 bg-red-50 relative group">
+                                    <p class="text-3xl font-black text-red-700 group-hover:text-red-600">${data.personalStats.pnafu}</p><p class="text-[10px] text-red-600 font-bold uppercase mt-1">PNAFU <i data-lucide="chevron-down" class="inline w-3 h-3"></i></p>
+                                </div>
+                                <div onclick="showPersonalDetail('PRIVADOS')" class="cursor-pointer hover:shadow-md transition-all transform hover:-translate-y-1 text-center p-4 rounded-xl border border-orange-200 bg-orange-50 relative group">
+                                    <p class="text-3xl font-black text-orange-700 group-hover:text-orange-600">${data.personalStats.privados}</p><p class="text-[10px] text-orange-600 font-bold uppercase mt-1">Privados <i data-lucide="chevron-down" class="inline w-3 h-3"></i></p>
+                                </div>
+                                <div onclick="showPersonalDetail('CURSO')" class="cursor-pointer hover:shadow-md transition-all transform hover:-translate-y-1 text-center p-4 rounded-xl border border-purple-200 bg-purple-50 relative group">
+                                    <p class="text-3xl font-black text-purple-700 group-hover:text-purple-600">${data.personalStats.curso}</p><p class="text-[10px] text-purple-600 font-bold uppercase mt-1">Curso <i data-lucide="chevron-down" class="inline w-3 h-3"></i></p>
+                                </div>
+                            </div>
+                        </div>
+                        ${detailHtml}
+                    </div>
+                `;
+            } else if (activeTab === 2) { // Trabajos Mensuales
+                let cards = data.trabajosMensualesData.map(t => `
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">${t.area}</span>
+                                <span class="text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider border ${t.color}">${t.estatus}</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-base mb-2">${t.titulo}</h4>
+                        </div>
+                        <div class="mt-4 border-t border-slate-100 pt-3 flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-500"><i data-lucide="calendar-clock" class="inline w-4 h-4 mr-1 mb-0.5"></i> Límite: <span class="text-slate-700">${t.limite}</span></span>
+                            <button class="text-blue-600 hover:underline text-xs font-bold">Ver Requisitos</button>
+                        </div>
+                    </div>
+                `).join('');
+                content = `
+                    <div class="animate-fade-in space-y-6">
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center"><i data-lucide="file-check-2" class="mr-2 text-indigo-600"></i> Trabajos e Informes Mensuales a Entregar</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${cards}</div>
+                    </div>
+                `;
+            } else if (activeTab === 3) { // Procesos Disciplinarios
+                let rows = data.procesosDisciplinariosData.map(p => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td class="p-3 sm:p-4 font-bold text-slate-800 whitespace-nowrap">${p.exp}</td>
+                        <td class="p-3 sm:p-4 font-bold text-slate-700 whitespace-nowrap">${p.jerarquia} ${p.nombre}</td>
+                        <td class="p-3 sm:p-4 text-slate-600 font-medium min-w-[200px]">${p.causa}</td>
+                        <td class="p-3 sm:p-4"><span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-bold text-slate-600 whitespace-nowrap">${p.unidad}</span></td>
+                        <td class="p-3 sm:p-4"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${p.estatus === 'REVISIÓN' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' : p.estatus === 'DECISIÓN' ? 'bg-orange-100 text-orange-800 border border-orange-200' : p.estatus === 'REMITIDO IG' ? 'bg-red-100 text-red-800 border border-red-200' : 'bg-blue-100 text-blue-800 border border-blue-200'}">${p.estatus}</span></td>
+                    </tr>
+                `).join('');
+                content = `
+                    <div class="animate-fade-in space-y-6">
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center"><i data-lucide="scale" class="mr-2 text-orange-600"></i> Relación de Procesos Disciplinarios Administrativos</h2>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm w-full">
+                            <table class="w-full text-left text-sm bg-white min-w-[800px]"><thead class="bg-slate-800 text-slate-200 uppercase text-[10px] tracking-wider"><tr><th class="p-3 sm:p-4">Nro Expediente</th><th class="p-3 sm:p-4">Jerarquía y Nombre</th><th class="p-3 sm:p-4">Causa / Falta</th><th class="p-3 sm:p-4">Unidad</th><th class="p-3 sm:p-4">Fase Actual</th></tr></thead><tbody>${rows}</tbody></table>
+                        </div>
+                    </div>
+                `;
+            } else if (activeTab === 4) { // Permisos / Embarazo (Standalone)
+                let repRows = data.repososData.map(r => `
+                    <div class="bg-yellow-50/50 p-4 rounded-xl border border-yellow-100 mb-3">
+                        <div class="flex justify-between items-start mb-2"><h4 class="font-bold text-sm text-slate-800">${r.jquia} ${r.nombre}</h4><span class="text-[10px] font-bold bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded uppercase ml-2 text-center sm:text-right">Hasta: ${r.hasta}</span></div>
+                        <p class="text-xs text-slate-600 mb-2"><span class="font-semibold">Patología:</span> ${r.patologia}</p>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${r.unidad}</p>
+                    </div>
+                `).join('');
+                content = `
+                    <div class="animate-fade-in grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                        <div><h3 class="text-base sm:text-lg font-bold text-slate-800 mb-4 flex items-center"><i data-lucide="stethoscope" class="mr-2 text-yellow-500 w-5 h-5"></i> Reposos Médicos Históricos</h3>${repRows}</div>
+                        <div><h3 class="text-base sm:text-lg font-bold text-slate-800 mb-4 flex items-center"><i data-lucide="baby" class="mr-2 text-pink-500 w-5 h-5"></i> Permisos Pre/Post Natal</h3>
+                            ${data.embarazosData.map(e => `<div class="bg-pink-50/50 p-4 rounded-xl border border-pink-100 mb-3"><h4 class="font-bold text-sm text-slate-800 mb-1">${e.jquia} ${e.nombre}</h4><p class="text-xs text-pink-700 font-bold uppercase tracking-wider">${e.patologia} - HASTA: ${e.hasta}</p></div>`).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (activeTab === 5) { // Atención Social
+                let events = data.atencionSocialData.map(a => `
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-start md:items-center">
+                        <div class="flex-shrink-0 bg-blue-50 text-blue-700 font-black p-4 rounded-lg text-center border border-blue-100 w-24">
+                            <span class="block text-2xl">${a.fecha.split('/')[0]}</span>
+                            <span class="block text-xs uppercase">${['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(a.fecha.split('/')[1])-1]}</span>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-slate-800 text-lg mb-1">${a.actividad}</h4>
+                            <p class="text-sm text-slate-600 mb-2">${a.desc}</p>
+                            <p class="text-xs font-bold text-slate-500 uppercase"><i data-lucide="map-pin" class="inline w-3 h-3 mr-1 mb-0.5"></i> ${a.lugar}</p>
+                        </div>
+                    </div>
+                `).join('');
+                content = `
+                    <div class="animate-fade-in space-y-6">
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center"><i data-lucide="heart-handshake" class="mr-2 text-pink-500"></i> Bienestar y Atención Social al Personal</h2>
+                        <div class="space-y-4 max-w-4xl">${events}</div>
+                    </div>
+                `;
+            } else if (activeTab === 6) { // Cursos y Capacitación
+                let rows = data.cursoData.map(c => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td class="p-3 sm:p-4 font-bold text-slate-800 whitespace-nowrap">${c.jerarquia} ${c.nombre}</td>
+                        <td class="p-3 sm:p-4 text-slate-600 font-medium min-w-[200px]">${c.curso}</td>
+                        <td class="p-3 sm:p-4"><span class="bg-slate-100 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap border border-slate-200"><i data-lucide="building-2" class="inline w-3 h-3 mr-1 mb-0.5"></i> ${c.instituto}</span></td>
+                        <td class="p-3 sm:p-4 text-center"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider whitespace-nowrap bg-green-100 text-green-800 border border-green-200">ACTIVO</span></td>
+                    </tr>
+                `).join('');
+                content = `
+                    <div class="animate-fade-in space-y-6">
+                        <div class="flex justify-between items-end mb-4">
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-800 flex items-center"><i data-lucide="graduation-cap" class="mr-2 text-purple-600"></i> Cursos y Capacitación Profesional</h2>
+                                <p class="text-sm text-slate-500 mt-1">Efectivos actualmente desplegados en institutos de formación civil y militar.</p>
+                            </div>
+                            <span class="bg-purple-100 text-purple-800 text-xs font-bold px-4 py-2 rounded-lg border border-purple-200 shadow-sm hidden sm:inline-block">Total en Curso: ${data.cursoData.length}</span>
+                        </div>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm w-full">
+                            <table class="w-full text-left text-sm bg-white min-w-[700px]"><thead class="bg-slate-800 text-slate-200 uppercase text-[10px] tracking-wider"><tr><th class="p-3 sm:p-4">Jerarquía y Nombre</th><th class="p-3 sm:p-4">Programa / Curso</th><th class="p-3 sm:p-4">Instituto Sede</th><th class="p-3 sm:p-4 text-center">Estatus</th></tr></thead><tbody>${rows}</tbody></table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('content-area').innerHTML = `<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 min-h-[600px]">${createTabs('PERSONAL')}${content}</div>`;
+            lucide.createIcons();
+        }
+
+        function renderInteligencia() {
+            const activeTab = state.activeTabs['INTELIGENCIA'];
+            let content = '';
+
+            if (activeTab === 0) { // PDL
+                let rows = data.pdlData.map(p => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="p-3 sm:p-4 font-bold text-slate-700 whitespace-nowrap">${p.jerarquia} ${p.nombre}</td>
+                        <td class="p-3 sm:p-4 text-slate-600 font-medium text-xs min-w-[200px]">${p.delito}</td>
+                        <td class="p-3 sm:p-4"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${p.estatus.includes('SENTENCIADO') ? 'bg-red-100 text-red-800 border border-red-200' : 'bg-orange-100 text-orange-800 border border-orange-200'}">${p.estatus}</span></td>
+                        <td class="p-3 sm:p-4 text-slate-500 text-xs font-bold whitespace-nowrap">${p.reclusion}</td>
+                    </tr>
+                `).join('');
+                content = `
+                    <div class="animate-fade-in space-y-6">
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center"><i data-lucide="gavel" class="mr-2 text-orange-500"></i> Relación de Privados de Libertad</h2>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm w-full">
+                            <table class="w-full text-left text-sm bg-white min-w-[800px]"><thead class="bg-slate-800 text-slate-200 uppercase text-[10px] tracking-wider"><tr><th class="p-3 sm:p-4">Identificación</th><th class="p-3 sm:p-4">Causa / Delito</th><th class="p-3 sm:p-4">Estatus Judicial</th><th class="p-3 sm:p-4">Centro Reclusión</th></tr></thead><tbody>${rows}</tbody></table>
+                        </div>
+                    </div>
+                `;
+            } else if (activeTab === 2) { // GEDO
+                let rows = data.gedoData.map(g => `
+                    <div class="border-l-4 border-red-500 bg-white p-4 sm:p-5 rounded-r-xl shadow-sm border-y border-r border-slate-200 mb-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2"><h3 class="text-lg font-black text-slate-800 uppercase mb-2 sm:mb-0">${g.nombre}</h3><span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-1 rounded uppercase">${g.estatus}</span></div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4"><div class="bg-slate-50 p-3 rounded-lg"><p class="text-[10px] text-slate-500 font-bold uppercase">Zona de Operación</p><p class="text-sm font-bold text-slate-700">${g.zona}</p></div><div class="bg-slate-50 p-3 rounded-lg"><p class="text-[10px] text-slate-500 font-bold uppercase">Delitos Principales</p><p class="text-sm font-bold text-slate-700">${g.delitos}</p></div></div>
+                        <p class="text-xs text-slate-500 mt-4 font-medium"><i data-lucide="target" class="inline w-3 h-3 mr-1 text-red-500"></i> Líder / Cabecilla: <span class="font-bold">${g.lider}</span></p>
+                    </div>
+                `).join('');
+                content = `<div class="animate-fade-in"><h2 class="text-xl font-bold text-slate-800 mb-6">Hampograma Estructural (GEDO)</h2>${rows}</div>`;
+            } else {
+                 content = `<div class="p-12 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200"><i data-lucide="brain-circuit" class="mx-auto w-12 h-12 text-slate-300 mb-3"></i><p class="font-bold text-slate-600 text-lg">Módulo: ${moduleTabs.INTELIGENCIA[activeTab]}</p></div>`;
+            }
+            document.getElementById('content-area').innerHTML = `<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 min-h-[600px]">${createTabs('INTELIGENCIA')}${content}</div>`;
+            lucide.createIcons();
+        }
+
+        function renderOperaciones() {
+            const activeTab = state.activeTabs['OPERACIONES'];
+            let content = '';
+            if (activeTab === 0) {
+                content = `
+                    <div class="animate-fade-in space-y-6">
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center"><i data-lucide="target" class="mr-2 text-red-600"></i> Resultados de Orden Interno</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-3"><span class="bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">D-131</span><span class="text-orange-600 bg-orange-100 font-bold text-[10px] px-2 py-1 rounded uppercase text-center ml-2">A/O Contraloría</span></div>
+                                <h4 class="font-bold text-slate-800 mb-2">Retención Alimentaria</h4><p class="text-sm text-slate-600">Retención de 600 Kg de queso blanco en vehículo Ford F-150. Conductor sin permiso sanitario vigente.</p>
+                            </div>
+                            <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-3"><span class="bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">D-131</span><span class="text-blue-600 bg-blue-100 font-bold text-[10px] px-2 py-1 rounded uppercase text-center ml-2">A/O MINEC</span></div>
+                                <h4 class="font-bold text-slate-800 mb-2">Citación Ambiental</h4><p class="text-sm text-slate-600">Citación a encargado de Auto Lavado Grupo South por falta de documentación para funcionamiento.</p>
+                            </div>
+                            <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-3"><span class="bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">D-134</span><span class="text-blue-600 bg-blue-100 font-bold text-[10px] px-2 py-1 rounded uppercase text-center ml-2">A/O MINEC</span></div>
+                                <h4 class="font-bold text-slate-800 mb-2">Guardería Ambiental</h4><p class="text-sm text-slate-600">Retención de 20 estantillos especie Cují en sector la Meseta de Bruzual por aprovechamiento ilícito.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (activeTab === 1) { // Instalaciones Estrategicas
+                let rows = data.subestacionesData.map(se => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-3 sm:p-4 font-bold text-slate-800 whitespace-nowrap">${se.unidad}</td><td class="p-3 sm:p-4 text-slate-600 font-medium min-w-[150px]">${se.instalacion}</td><td class="p-3 sm:p-4 text-center font-bold text-blue-600">${se.personal}</td><td class="p-3 sm:p-4 text-center text-green-600"><i data-lucide="check-circle" class="w-5 h-5 mx-auto"></i></td></tr>
+                `).join('');
+                content = `<div class="animate-fade-in"><h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center"><i data-lucide="zap" class="mr-2 text-yellow-500"></i> Resguardo Instalaciones Básicas / Eléctricas</h2><div class="overflow-x-auto rounded-xl border border-slate-200 w-full"><table class="w-full text-left text-sm bg-white min-w-[500px]"><thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider"><tr><th class="p-3 sm:p-4">Unidad</th><th class="p-3 sm:p-4">Instalación</th><th class="p-3 sm:p-4 text-center">Efectivos</th><th class="p-3 sm:p-4 text-center">Revista Ok</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+            } else {
+                content = `<div class="p-12 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200"><i data-lucide="shield-alert" class="mx-auto w-12 h-12 text-slate-300 mb-3"></i><p class="font-bold text-slate-600 text-lg">Módulo: ${moduleTabs.OPERACIONES[activeTab]}</p></div>`;
+            }
+            document.getElementById('content-area').innerHTML = `<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 min-h-[600px]">${createTabs('OPERACIONES')}${content}</div>`;
+            lucide.createIcons();
+        }
+
+        function renderLogistica() {
+            const activeTab = state.activeTabs['LOGISTICA'];
+            let content = '';
+            if (activeTab === 0 || activeTab === 1) { // Transporte
+                let rows = data.transporteData.map(t => `
+                    <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
+                        <div class="flex items-center mb-4 sm:mb-0"><div class="p-3 bg-slate-100 rounded-lg mr-4"><i data-lucide="truck" class="text-slate-600"></i></div><div><h4 class="font-bold text-slate-800 text-sm sm:text-base">${t.tipo}</h4><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Flota Total: ${t.cantidad}</p></div></div>
+                        <div class="flex space-x-6 sm:space-x-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-slate-100 pt-4 sm:pt-0"><div class="text-center"><p class="text-2xl font-black text-green-600">${t.operativos}</p><p class="text-[9px] font-bold text-slate-500 uppercase mt-1">Operativos</p></div><div class="text-center"><p class="text-2xl font-black text-red-600">${t.inoperativos}</p><p class="text-[9px] font-bold text-slate-500 uppercase mt-1">Inoperativos</p></div></div>
+                    </div>
+                `).join('');
+                content = `<div class="animate-fade-in space-y-4"><h2 class="text-xl font-bold text-slate-800 mb-6">Situación de Parque Automotor</h2>${rows}</div>`;
+            } else if (activeTab === 2 || activeTab === 3) { // Armamento
+                let cards = data.armamentoData.map(e => `
+                    <div class="border border-slate-200 rounded-xl p-4 sm:p-5 bg-slate-50 hover:bg-white transition-colors">
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-4"><h4 class="font-black text-slate-800 uppercase tracking-wide">EJE ${e.eje}</h4><span class="text-[10px] bg-slate-800 text-white px-2 py-1 rounded font-bold ml-2 text-center">${e.responsable}</span></div>
+                        <div class="flex space-x-2 sm:space-x-4"><div class="flex-1 bg-white p-2 sm:p-3 rounded-lg border border-slate-200 text-center shadow-sm"><p class="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase mb-1">Fusiles FAL</p><p class="text-lg sm:text-xl font-black text-slate-800">${e.fusiles.toLocaleString('es-ES')}</p></div><div class="flex-1 bg-white p-2 sm:p-3 rounded-lg border border-slate-200 text-center shadow-sm"><p class="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase mb-1">Municiones</p><p class="text-lg sm:text-xl font-black text-yellow-600">${e.municiones.toLocaleString('es-ES')}</p></div></div>
+                    </div>
+                `).join('');
+                content = `<div class="animate-fade-in space-y-6"><h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center"><i data-lucide="crosshair" class="mr-2"></i> Consolidado Armamento Provincial</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6">${cards}</div></div>`;
+            } else {
+                 content = `<div class="p-12 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200"><p class="font-bold text-slate-600 text-lg">Módulo: ${moduleTabs.LOGISTICA[activeTab]}</p></div>`;
+            }
+            document.getElementById('content-area').innerHTML = `<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 min-h-[600px]">${createTabs('LOGISTICA')}${content}</div>`;
+            lucide.createIcons();
+        }
+
+        function renderPlanificacion() {
+            let cards = data.agendaData.map((dia, idx) => `
+                <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col h-full bg-white">
+                    <div class="p-3 flex justify-between items-center ${idx < 5 ? 'bg-slate-800 text-white' : 'bg-green-700 text-white'}"><span class="font-black uppercase tracking-wider text-sm">${dia.day}</span><span class="text-[10px] font-bold opacity-80">${dia.date}</span></div>
+                    <div class="p-4 sm:p-5 bg-slate-50 flex-1"><ul class="space-y-3">${dia.events.map(e => `<li class="text-[13px] text-slate-700 flex items-start font-medium leading-snug"><span class="text-green-500 mr-2 mt-0.5 font-bold">•</span><span>${e}</span></li>`).join('')}</ul></div>
+                </div>
+            `).join('');
+            const content = `<div class="animate-fade-in"><div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6"><h2 class="text-xl font-bold text-slate-800 flex items-center mb-2 sm:mb-0"><i data-lucide="calendar" class="mr-2 text-blue-600"></i> Agenda Concreta de Acción</h2><span class="bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">20 ABR AL 26 ABR 2026</span></div><div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">${cards}</div></div>`;
+            document.getElementById('content-area').innerHTML = `<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 min-h-[600px]">${createTabs('PLANIFICACION')}${content}</div>`;
+            lucide.createIcons();
+        }
+
+        function renderEstadistica() {
+            const activeTab = state.activeTabs['ESTADISTICA'];
+            let contentHtml = '';
+            
+            if (activeTab === 0) {
+                contentHtml = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 flex-1">
+                        <div class="bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200 shadow-inner flex flex-col">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 text-center">Efectividad Operacional Mensual (Casos)</h4>
+                            <div class="flex-1 relative min-h-[250px] sm:min-h-[300px]"><canvas id="chartG1"></canvas></div>
+                        </div>
+                        <div class="bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200 shadow-inner flex flex-col">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 text-center">Casos por Eje Territorial</h4>
+                            <div class="flex-1 relative min-h-[250px] sm:min-h-[300px]"><canvas id="chartG2"></canvas></div>
+                        </div>
+                    </div>`;
+            } else if (activeTab === 1) {
+                contentHtml = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 flex-1">
+                        <div class="bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200 shadow-inner flex flex-col">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 text-center">Retenciones Sanitarias e Impuestos</h4>
+                            <div class="flex-1 relative min-h-[250px] sm:min-h-[300px]"><canvas id="chartG1"></canvas></div>
+                        </div>
+                        <div class="bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200 shadow-inner flex flex-col">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 text-center">Infracciones Viales Registradas</h4>
+                            <div class="flex-1 relative min-h-[250px] sm:min-h-[300px]"><canvas id="chartG2"></canvas></div>
+                        </div>
+                    </div>`;
+            } else if (activeTab === 2) {
+                contentHtml = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 flex-1">
+                        <div class="bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200 shadow-inner flex flex-col">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 text-center">Horas de Patrullaje CUPAZ</h4>
+                            <div class="flex-1 relative min-h-[250px] sm:min-h-[300px]"><canvas id="chartG1"></canvas></div>
+                        </div>
+                        <div class="bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200 shadow-inner flex flex-col">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 text-center">Despliegues Conjuntos (OSC)</h4>
+                            <div class="flex-1 relative min-h-[250px] sm:min-h-[300px]"><canvas id="chartG2"></canvas></div>
+                        </div>
+                    </div>`;
+            } else {
+                 contentHtml = `<div class="p-12 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex-1"><i data-lucide="bar-chart" class="mx-auto w-12 h-12 text-slate-300 mb-3"></i><p class="font-bold text-slate-600 text-lg">Módulo: ${moduleTabs.ESTADISTICA[activeTab]}</p><p class="text-sm text-slate-500">Métricas en construcción.</p></div>`;
+            }
+
+            const wrapper = `
+                <div class="animate-fade-in space-y-6 sm:space-y-8 flex flex-col h-full w-full">
+                    <h2 class="text-xl font-bold text-slate-800">Panel de Indicadores de Gestión</h2>
+                    ${contentHtml}
+                </div>
+            `;
+
+            document.getElementById('content-area').innerHTML = `<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 min-h-[600px] flex flex-col w-full">${createTabs('ESTADISTICA')}${wrapper}</div>`;
+            lucide.createIcons();
+
+            // Configurar ChartJS dependiendo del tab
+            setTimeout(() => {
+                const ctx1 = document.getElementById('chartG1');
+                const ctx2 = document.getElementById('chartG2');
+                
+                if (activeTab === 0 && ctx1 && ctx2) {
+                    chartInstances.push(new Chart(ctx1.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+                            datasets: [{ label: 'Casos Resueltos', data: [12, 28, 15, 32], borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.2)', tension: 0.4, fill: true, pointBackgroundColor: '#fff', pointBorderWidth: 2, pointRadius: 5 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } } }
+                    }));
+                    chartInstances.push(new Chart(ctx2.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['Eje Central', 'Eje Península', 'Eje Occidente', 'Eje Oriente'],
+                            datasets: [{ label: 'Procedimientos', data: [45, 32, 28, 55], backgroundColor: ['#3b82f6', '#8b5cf6', '#f43f5e', '#f59e0b'], borderRadius: 6 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } } }
+                    }));
+                } else if (activeTab === 1 && ctx1 && ctx2) {
+                    chartInstances.push(new Chart(ctx1.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Sin Permiso Sanitario', 'Evasión Impuestos', 'Licores Clandestinos', 'Otros'],
+                            datasets: [{ data: [40, 25, 20, 15], backgroundColor: ['#ef4444', '#f97316', '#eab308', '#94a3b8'], borderWidth: 0, hoverOffset: 4 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+                    }));
+                    chartInstances.push(new Chart(ctx2.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'],
+                            datasets: [{ label: 'Multas Aplicadas', data: [15, 10, 8, 22, 45], backgroundColor: '#0f172a', borderRadius: 4 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } } }
+                    }));
+                } else if (activeTab === 2 && ctx1 && ctx2) {
+                    chartInstances.push(new Chart(ctx1.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['D-131', 'D-132', 'D-133', 'D-134', 'DCR13-1', 'DCR13-2'],
+                            datasets: [{ label: 'Horas CUPAZ', data: [120, 95, 110, 85, 140, 60], backgroundColor: '#10b981', borderRadius: 4 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } } }
+                    }));
+                    chartInstances.push(new Chart(ctx2.getContext('2d'), {
+                        type: 'pie',
+                        data: {
+                            labels: ['GNB', 'PNB', 'Polifalcón', 'Policía Municipal', 'CICPC'],
+                            datasets: [{ data: [55, 20, 15, 5, 5], backgroundColor: ['#1d4ed8', '#dc2626', '#fbbf24', '#2563eb', '#475569'], borderWidth: 0, hoverOffset: 4 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                    }));
+                }
+            }, 50);
+        }
+
+        function renderInstrucciones() {
+            const activeTab = state.activeTabs['INSTRUCCIONES'];
+            let content = '';
+
+            if (activeTab === 0) { // Bandeja Documental
+                const rows = data.instruccionesData.map(d => `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 sm:p-5 bg-white rounded-xl border border-slate-200 hover:shadow-md transition-all mb-4 cursor-pointer relative overflow-hidden group">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 ${d.color.split(' ')[0]} group-hover:w-2 transition-all"></div>
+                        <div class="pl-4 mb-4 sm:mb-0 w-full sm:w-auto">
+                            <div class="flex items-center mb-1">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider whitespace-nowrap ${d.color}">${d.tipo}</span>
+                                <span class="ml-3 text-xs font-bold text-slate-400 whitespace-nowrap truncate max-w-[150px] sm:max-w-none">Ref: ${d.num}</span>
+                            </div>
+                            <p class="font-bold text-[14px] sm:text-[15px] text-slate-800 mt-2">${d.desc}</p>
+                            <p class="text-[11px] text-slate-500 font-bold uppercase mt-2">Emitido por: <span class="text-slate-700">${d.resp}</span></p>
+                        </div>
+                        <div class="flex sm:flex-col items-center sm:items-end w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-slate-100 pt-3 sm:pt-0">
+                            <span class="text-xs font-bold text-slate-400 sm:mb-3 bg-slate-50 px-2 py-1 rounded"><i data-lucide="clock" class="inline w-3 h-3 mb-0.5"></i> ${d.fecha}</span>
+                            <button class="bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-sm ml-4 sm:ml-0">Abrir PDF</button>
+                        </div>
+                    </div>
+                `).join('');
+                content = `
+                    <div class="animate-fade-in bg-slate-50 p-4 sm:p-6 rounded-2xl border border-slate-200 w-full">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6">
+                            <h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center mb-2 sm:mb-0"><i data-lucide="inbox" class="mr-2 text-blue-600"></i> Bandeja de Entrada</h2>
+                            <span class="text-xs font-bold bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">Mostrando ${data.instruccionesData.length} registros</span>
+                        </div>
+                        ${rows}
+                    </div>
+                `;
+            } else if (activeTab === 1) { // Verbales
+                const rows = data.instruccionesVerbalesData.map(v => `
+                    <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm mb-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
+                            <h4 class="font-bold text-slate-800 text-base sm:text-lg flex items-center mb-2 sm:mb-0"><i data-lucide="mic" class="w-4 h-4 mr-2 text-slate-400"></i> ${v.emisor}</h4>
+                            <span class="bg-blue-50 text-blue-700 font-bold text-[10px] px-2 py-1 rounded uppercase border border-blue-200">${v.estatus}</span>
+                        </div>
+                        <p class="text-sm text-slate-600 italic border-l-4 border-slate-300 pl-3 py-1 mb-3">"${v.asunto}"</p>
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs text-slate-500 font-bold border-t sm:border-t-0 border-slate-100 pt-3 sm:pt-0 mt-3 sm:mt-0">
+                            <span class="mb-2 sm:mb-0"><i data-lucide="clock" class="inline w-3 h-3 mr-1"></i> ${v.fecha}</span>
+                            <span class="uppercase tracking-wider text-slate-400">Ejecuta: <span class="text-slate-700">${v.receptor}</span></span>
+                        </div>
+                    </div>
+                `).join('');
+                content = `<div class="animate-fade-in"><h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center"><i data-lucide="phone-call" class="mr-2 text-green-600"></i> Registro de Instrucciones Verbales</h2>${rows}</div>`;
+            } else if (activeTab === 2) { // Documentos Externos
+                const rows = data.docExternosData.map(d => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="p-3 sm:p-4"><span class="font-bold text-slate-800 whitespace-nowrap">${d.ente}</span><br><span class="text-[10px] font-bold text-slate-400 uppercase whitespace-nowrap">Ref: ${d.ref}</span></td>
+                        <td class="p-3 sm:p-4 text-sm text-slate-600 font-medium min-w-[200px]">${d.asunto}</td>
+                        <td class="p-3 sm:p-4 text-xs font-bold text-slate-500 whitespace-nowrap">${d.fecha}</td>
+                        <td class="p-3 sm:p-4"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${d.prioridad === 'ALTA' ? 'bg-red-100 text-red-800 border border-red-200' : 'bg-yellow-100 text-yellow-800 border border-yellow-200'}">${d.prioridad}</span></td>
+                        <td class="p-3 sm:p-4"><button class="text-blue-600 hover:underline text-xs font-bold whitespace-nowrap">Ver Adjunto</button></td>
+                    </tr>
+                `).join('');
+                content = `
+                    <div class="animate-fade-in space-y-6">
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center"><i data-lucide="building-2" class="mr-2 text-indigo-600"></i> Documentos Recibidos de Entes Externos</h2>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm w-full">
+                            <table class="w-full text-left text-sm bg-white min-w-[700px]"><thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider"><tr><th class="p-3 sm:p-4">Institución Remitente</th><th class="p-3 sm:p-4">Asunto / Descripción</th><th class="p-3 sm:p-4">Recibido</th><th class="p-3 sm:p-4">Prioridad</th><th class="p-3 sm:p-4">Acción</th></tr></thead><tbody>${rows}</tbody></table>
+                        </div>
+                    </div>
+                `;
+            } else if (activeTab === 3) { // Expedientes
+                 const rows = data.expedientesData.map(e => `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white rounded-xl border border-slate-200 mb-3 hover:shadow-sm">
+                        <div class="flex items-start sm:items-center mb-3 sm:mb-0">
+                            <div class="bg-slate-100 p-2 rounded-lg mr-4 mt-1 sm:mt-0"><i data-lucide="folder-open" class="w-5 h-5 text-slate-600"></i></div>
+                            <div><span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${e.exp}</span><h4 class="font-bold text-slate-800 mt-0.5">${e.involucrado}</h4><p class="text-xs text-slate-500 mt-1">${e.causa}</p></div>
+                        </div>
+                        <div class="flex sm:flex-col justify-between sm:items-end w-full sm:w-auto border-t sm:border-t-0 border-slate-100 pt-3 sm:pt-0 mt-2 sm:mt-0">
+                            <span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider mb-0 sm:mb-2">${e.fase}</span>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Aperturado: ${e.fecha}</p>
+                        </div>
+                    </div>
+                `).join('');
+                content = `<div class="animate-fade-in bg-slate-50 p-4 sm:p-6 rounded-2xl border border-slate-200"><h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center"><i data-lucide="folder-clock" class="mr-2 text-slate-600"></i> Expedientes Administrativos Disciplinarios</h2>${rows}</div>`;
+            }
+
+            document.getElementById('content-area').innerHTML = `<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 min-h-[600px]">${createTabs('INSTRUCCIONES')}${content}</div>`;
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // CONTROLADOR PRINCIPAL
+        // ==========================================
+        function renderSidebar() {
+            const nav = document.getElementById('sidebar-nav');
+            let html = '';
+            
+            html += `<div class="px-5 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 mt-2">Visión General</div>`;
+            html += `<div onclick="setModule('DASHBOARD')" class="sidebar-item ${state.currentModule === 'DASHBOARD' ? 'active' : ''} flex items-center px-5 py-3 cursor-pointer transition-all duration-200"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i><span class="font-medium text-sm tracking-wide">Dashboard Principal</span></div>`;
+            
+            html += `<div class="px-5 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 mt-6">Módulos del Sistema</div>`;
+            modules.filter(m => m.type === 'module').forEach(m => {
+                html += `<div onclick="setModule('${m.id}')" class="sidebar-item ${state.currentModule === m.id ? 'active' : ''} flex items-center px-5 py-3 cursor-pointer transition-all duration-200"><i data-lucide="${m.icon}" class="w-5 h-5 mr-3"></i><span class="font-medium text-sm tracking-wide">${m.title}</span></div>`;
+            });
+
+            nav.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function setModule(moduleName) {
+            state.currentModule = moduleName;
+            
+            if(moduleName !== 'PERSONAL') state.personalDetailView = null;
+
+            destroyCharts(); 
+            
+            renderSidebar();
+            const modObj = modules.find(m => m.id === moduleName);
+            document.getElementById('header-title').innerText = modObj ? modObj.title.replace(/^[IVX]+\.\s/, '') : moduleName;
+            
+            document.getElementById('main-scroll-area').scrollTop = 0;
+
+            switch(moduleName) {
+                case 'DASHBOARD': renderDashboard(); break;
+                case 'PERSONAL': renderPersonal(); break;
+                case 'INTELIGENCIA': renderInteligencia(); break;
+                case 'OPERACIONES': renderOperaciones(); break;
+                case 'LOGISTICA': renderLogistica(); break;
+                case 'PLANIFICACION': renderPlanificacion(); break;
+                case 'ESTADISTICA': renderEstadistica(); break;
+                case 'INSTRUCCIONES': renderInstrucciones(); break;
+            }
+
+            // Ocultar sidebar automáticamente en móviles si se selecciona un módulo nuevo
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                if (!sidebar.classList.contains('-translate-x-full')) {
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                }
+            }
+        }
+
+        function changeTab(moduleName, tabIndex) {
+            state.activeTabs[moduleName] = tabIndex;
+            state.personalDetailView = null; 
+            setModule(moduleName); 
+        }
+
+        // Init App
+        document.addEventListener('DOMContentLoaded', () => {
+            setModule('DASHBOARD');
+        });
+
+    </script>
+</body>
+</html>
